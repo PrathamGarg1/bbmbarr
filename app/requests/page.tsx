@@ -155,9 +155,9 @@ export default async function AllRequestsPage({
                         {format(req.startDate, 'dd MMM yy')} – {format(req.endDate, 'dd MMM yy')}
                       </td>
                       <td className="px-5 py-3.5 text-xs text-slate-500">
-                        {req.checkerNameJA && <span className="block">JA: {req.checkerNameJA}</span>}
-                        {req.checkerNameSA && <span className="block">SA: {req.checkerNameSA}</span>}
-                        {!req.checkerNameJA && !req.checkerNameSA && '—'}
+                        {(req as any).checkerNameJA && <span className="block">JA: {(req as any).checkerNameJA}</span>}
+                        {(req as any).checkerNameSA && <span className="block">SA: {(req as any).checkerNameSA}</span>}
+                        {!(req as any).checkerNameJA && !(req as any).checkerNameSA && '—'}
                       </td>
                       <td className="px-5 py-3.5">
                         <span className={cn(

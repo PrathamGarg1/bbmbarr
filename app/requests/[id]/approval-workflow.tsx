@@ -48,15 +48,15 @@ export default function ApprovalWorkflow({ request, userRole }: ApprovalWorkflow
             </span>
           </div>
 
-          {'label' in action ? (
+          {'label' in action && 'next' in action ? (
               <div className="space-y-3">
                  <button 
-                    onClick={() => updateStatus(request.id, action.next)}
+                    onClick={() => updateStatus(request.id, action.next as string)}
                     className="w-full bg-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm hover:bg-indigo-700 transition-all active:scale-[0.98]"
                   >
-                      {action.label}
+                      {action.label as string}
                   </button>
-                  <p className="text-[10px] text-center text-slate-400">Action performed by: {action.role}</p>
+                  <p className="text-[10px] text-center text-slate-400">Action performed by: {action.role as string}</p>
               </div>
           ) : (
               <div className="flex items-center gap-2 text-slate-500 italic text-sm">

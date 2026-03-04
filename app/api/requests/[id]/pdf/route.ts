@@ -128,9 +128,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
         // Row 2
         doc.font('Helvetica-Bold').fillColor(BLUE).text('Checker JA:', col1, boxY + 16)
-        doc.font('Helvetica').fillColor('#000').text(request.checkerNameJA || '—', col2, boxY + 16)
+        doc.font('Helvetica').fillColor('#000').text((request as any).checkerNameJA || '—', col2, boxY + 16)
         doc.font('Helvetica-Bold').fillColor(BLUE).text('Checker SA:', col3, boxY + 16)
-        doc.font('Helvetica').fillColor('#000').text(request.checkerNameSA || '—', col4, boxY + 16)
+        doc.font('Helvetica').fillColor('#000').text((request as any).checkerNameSA || '—', col4, boxY + 16)
 
         // Row 3
         const period = `${format(new Date(request.startDate), 'dd.MM.yyyy')}  to  ${format(new Date(request.endDate), 'dd.MM.yyyy')}`
@@ -232,7 +232,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
         const sigs = [
             { label: 'Clerk / Lipik', detail: '' },
-            { label: `JA: ${request.checkerNameJA || '___________'}\nSA: ${request.checkerNameSA || '___________'}`, detail: 'Jr./Sr. Assistant' },
+            { label: `JA: ${(request as any).checkerNameJA || '___________'}\nSA: ${(request as any).checkerNameSA || '___________'}`, detail: 'Jr./Sr. Assistant' },
             { label: 'Superintendent / Adhikshak', detail: '' },
         ]
 
