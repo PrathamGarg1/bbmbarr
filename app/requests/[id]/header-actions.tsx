@@ -1,9 +1,7 @@
-
 'use client'
 
 import { MotionButton } from '@/components/ui/motion-button'
 import { Download, FileSpreadsheet } from 'lucide-react'
-import { generatePDF } from '@/lib/pdf-generator'
 import { generateExcel } from '@/lib/excel-generator'
 import { calculateArrears } from '@/lib/calculation-engine'
 
@@ -20,7 +18,7 @@ export function RequestHeaderActions({ request, daRates }: RequestHeaderActionsP
       date: new Date(p.date)
     }))
     
-    const safeDARates = daRates.map(d => ({
+    const safeDARates = daRates.map((d: any) => ({
       ...d,
       effectiveDate: new Date(d.effectiveDate)
     }))
@@ -37,17 +35,26 @@ export function RequestHeaderActions({ request, daRates }: RequestHeaderActionsP
     return { segments, totalArrear }
   }
 
-  const handleExportPDF = () => {
-    const { segments, totalArrear } = getCalculationData()
-
-    generatePDF({
-      employeeName: request.employeeName || 'Employee',
-      employeeId: request.employeeId,
-      startDate: new Date(request.startDate),
-      endDate: new Date(request.endDate),
-      segments,
-      totalArrear
-    })
+  const handleExportPDF = async () => {
+    try {
+      // Use the server-side PDF API (supports Hindi via pdfmake)
+      const res = await fetch(`/api/requests/${request.id}/pdf`)
+      if (!res.ok) {
+        const err = await res.json()
+        alert('PDF generation failed: ' + (err.error || 'Unknown error'))
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      const empName = (request.employeeName || request.employeeId).replace(/\s+/g, '_')
+      a.download = `BBMB_Arrear_${empName}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      alert('Error generating PDF: ' + e.message)
+    }
   }
 
   const handleExportExcel = () => {
@@ -68,7 +75,7 @@ export function RequestHeaderActions({ request, daRates }: RequestHeaderActionsP
     <div className="flex gap-2">
       <MotionButton variant="secondary" onClick={handleExportPDF}>
         <Download className="mr-2 h-4 w-4" />
-        Export PDF
+        Export PDF (Hindi)
       </MotionButton>
       <MotionButton variant="secondary" onClick={handleExportExcel}>
         <FileSpreadsheet className="mr-2 h-4 w-4" />

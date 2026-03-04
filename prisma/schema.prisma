@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema — matched exactly to the restored Neon DB structure
 
 generator client {
   provider = "prisma-client-js"
@@ -13,11 +12,13 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  password  String
   name      String?
-  role      String   // CLERK, JR_ASSISTANT, SR_ASSISTANT, SUPERINTENDENT, AO
+  role      String   // CLERK, JA, SA, SUPERINTENDENT, PASSWORD_MANAGER
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   requestsInitiated ArrearRequest[] @relation("Initiator")
   logs              AuditLog[]
 }
@@ -30,59 +31,61 @@ model DARate {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  @@unique([effectiveDate, type]) // effectiveDate is not unique alone anymore
+  @@unique([effectiveDate, type])
 }
 
 model ArrearRequest {
-  id             String   @id @default(cuid())
-  employeeId     String
-  employeeName   String?
-  startDate      DateTime
-  endDate        DateTime
-  status         String   @default("DRAFT") // DRAFT, PENDING_CALC, PENDING_BUDGET, PENDING_APPROVAL, APPROVED, REJECTED
-  
-  initiatorId    String
-  initiator      User     @relation("Initiator", fields: [initiatorId], references: [id])
-  
-  payEvents      PayEvent[]
-  auditLogs      AuditLog[]
-  
-  calculationResult String? // JSON string of the detailed calculation grid
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                String   @id @default(cuid())
+  employeeId        String
+  employeeName      String?
+  checkerNameJA     String?  // Filled by CLERK
+  checkerNameSA     String?  // Filled by CLERK
+  startDate         DateTime
+  endDate           DateTime
+  status            String   @default("DRAFT")
+
+  initiatorId       String
+  initiator         User     @relation("Initiator", fields: [initiatorId], references: [id])
+
+  payEvents         PayEvent[]
+  auditLogs         AuditLog[]
+
+  calculationResult String?  // JSON string of the calculation grid
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model PayEvent {
-  id          String        @id @default(cuid())
-  date        DateTime
-  type        String        // PROMOTION, ANNUAL_INCREMENT, REVISION, ARREAR_INSTALLMENT
-  
-  // DUE (Revised Pay)
-  basicPay    Float         // 7th CPC Basic
-  
-  // DRAWN (Old Pay structure)
-  drawnBasicPay Float?      // 6th CPC Band Pay
-  drawnGradePay Float?      // 6th CPC Grade Pay
-  drawnIR       Float?      // Interim Relief
-  
-  requestId   String
-  request     ArrearRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id            String        @id @default(cuid())
+  date          DateTime
+  type          String        // PROMOTION, ANNUAL_INCREMENT, REVISION
+
+  // DUE (7th CPC)
+  basicPay      Float
+
+  // DRAWN (6th CPC)
+  drawnBasicPay Float?
+  drawnGradePay Float?
+  drawnIR       Float?
+
+  requestId     String
+  request       ArrearRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model AuditLog {
-  id          String        @id @default(cuid())
-  action      String
-  comments    String?
-  
-  requestId   String
-  request     ArrearRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  
+  id            String        @id @default(cuid())
+  action        String        // CREATED, UPDATED, APPROVED, etc.
+  comments      String?
+
+  requestId     String
+  request       ArrearRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
   performedById String
   performedBy   User          @relation(fields: [performedById], references: [id])
-  
-  createdAt   DateTime      @default(now())
+
+  createdAt     DateTime      @default(now())
 }

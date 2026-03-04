@@ -1,65 +1,128 @@
+'use client'
 
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { cookies } from 'next/headers'
+import { useState } from 'react'
+import { signIn } from 'next-auth/react'
+import { Loader2, ShieldCheck } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+const ROLES = [
+  { value: 'CLERK', label: 'CLERK — लिपिक' },
+  { value: 'JA', label: 'JA — कनिष्ठ सहायक' },
+  { value: 'SA', label: 'SA — वरिष्ठ सहायक' },
+  { value: 'SUPERINTENDENT', label: 'SUPERINTENDENT — अधीक्षक' },
+  { value: 'PASSWORD_MANAGER', label: 'PASSWORD MANAGER' },
+]
 
-export default async function LoginPage() {
-  const users = await prisma.user.findMany({
-    orderBy: { role: 'asc' }
-  })
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [role, setRole] = useState('CLERK')
 
-  async function login(formData: FormData) {
-    'use server'
-    console.log('Login action started')
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    const formData = new FormData(e.currentTarget)
+
     try {
-      const email = formData.get('email') as string
-      console.log('Attempting login for:', email)
-      
-      const user = await prisma.user.findUnique({ where: { email } })
-      console.log('User found:', user)
-      
-      if (user) {
-        console.log('Setting cookies...')
-        const cookieStore = await cookies()
-        cookieStore.set('user_email', user.email)
-        cookieStore.set('user_role', user.role)
-        console.log('Cookies set. Redirecting...')
-      } else {
-        console.log('User not found')
+      const result = await signIn('credentials', {
+        role: formData.get('role'),
+        password: formData.get('password'),
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError('Invalid password. Please try again.')
+        setLoading(false)
+      } else if (result?.ok) {
+        window.location.href = '/dashboard'
       }
-    } catch (e) {
-      console.error('Login error:', e)
-      throw e
+    } catch {
+      setError('An error occurred during login.')
+      setLoading(false)
     }
-    // Redirect must be outside try/catch if it throws NEXT_REDIRECT, or just let it bubble
-    redirect('/dashboard')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">BBMB Arrears Login</h1>
-        <div className="space-y-4">
-          <p className="text-sm text-gray-500 text-center mb-4">Select a user to simulate login:</p>
-          {users.map(u => (
-            <form key={u.id} action={login} className="block">
-              <input type="hidden" name="email" value={u.email} />
-              <button 
-                type="submit"
-                className="w-full text-left px-4 py-3 border rounded hover:bg-blue-50 hover:border-blue-300 transition-colors flex justify-between items-center group"
-              >
-                <div>
-                  <div className="font-medium text-gray-900 group-hover:text-blue-700">{u.name}</div>
-                  <div className="text-xs text-gray-500">{u.email}</div>
+    <div className="min-h-screen flex items-center justify-center bg-lime-200
+ from-blue-950 via-indigo-900 to-blue-800">
+      <div className="absolute inset-0 opacity-10"
+        style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '48px 48px' }}
+      />
+
+      <div className="relative max-w-md w-full mx-4">
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-900 to-indigo-800 px-8 py-8 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 shadow-lg">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/bbmb-logo.jpeg" alt="BBMB Logo" className="w-16 h-16 object-contain rounded-full" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">BBMB Arrears System</h1>
+            <p className="text-blue-200 text-sm mt-1">भाखड़ा ब्यास प्रबंध बोर्ड</p>
+            <p className="text-blue-300 text-xs mt-2">Select your role to continue</p>
+          </div>
+
+          {/* Form */}
+          <div className="px-8 py-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
                 </div>
-                <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-800">
-                  {u.role}
-                </span>
+              )}
+
+              <div>
+                <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Role / पद
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={role}
+                  onChange={e => setRole(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-gray-900 text-sm"
+                  required
+                >
+                  {ROLES.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Password / पासवर्ड
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
+                  placeholder="Enter password"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center px-4 py-3 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                    Signing in...
+                  </>
+                ) : 'Sign In / लॉगिन करें'}
               </button>
             </form>
-          ))}
+
+            <p className="mt-6 text-center text-xs text-gray-400">
+              For password changes, contact the Password Manager
+            </p>
+          </div>
         </div>
       </div>
     </div>

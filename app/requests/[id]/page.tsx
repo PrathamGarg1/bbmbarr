@@ -1,16 +1,20 @@
 import { prisma } from '@/lib/db'
+import { auth } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import PayEventsEditor from './events-editor'
 import CalculationGrid from './calculation-grid'
-import ApprovalWorkflow from './approval-workflow'
 import { calculateArrears } from '@/lib/calculation-engine'
 import { RequestHeaderActions } from './header-actions'
+import ApprovalWorkflow from './approval-workflow'
 
 export default async function RequestDetailPage({ params }: { params: { id: string } }) {
+  const session = await auth()
+  const userRole = session?.user?.role as string
   const { id } = await params
+  
   const request = await prisma.arrearRequest.findUnique({
     where: { id },
     include: { 
@@ -81,6 +85,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             </div>
             <PayEventsEditor 
               requestId={request.id} 
+              userRole={userRole}
               initialEvents={request.payEvents.map(e => ({
                 ...e,
                 drawnBasicPay: e.drawnBasicPay ?? undefined,
@@ -88,11 +93,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                 drawnIR: e.drawnIR ?? undefined
               }))} 
             />
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Workflow Actions</h2>
-            <ApprovalWorkflow request={request} />
+            <ApprovalWorkflow request={request} userRole={userRole} />
           </div>
         </div>
 
@@ -113,8 +114,6 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
            </div>
         </div>
       </div>
-
-
     </div>
   )
 }

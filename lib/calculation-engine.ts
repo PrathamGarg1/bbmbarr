@@ -97,14 +97,17 @@ export function calculateArrears(req: CalculationRequest): Segment[] {
         const drawnBP = activePayEvent?.drawnBasicPay || 0
         const drawnGP = activePayEvent?.drawnGradePay || 0
 
-        // Auto-calculate 5% IR for drawn side from 1.1.2017 onwards
+        // Priority: 1. Provided in event (e.g. from Excel Import), 2. Auto-calculated for 2017+, 3. Zero
         const irStartDate = new Date('2017-01-01')
-        let drawnIR = 0
+        let drawnIR = activePayEvent?.drawnIR ?? 0
 
-        // From 1.1.2017 onwards: IR = 5% of (Basic + Grade Pay)
-        // Before 1.1.2017 (2016): IR = 0
-        if (!isBefore(segStart, irStartDate)) {
-            drawnIR = Math.round((drawnBP + drawnGP) * 0.05)
+        // If not explicitly provided (e.g. manual entry), auto-calculate for 2017+
+        if (activePayEvent?.drawnIR === undefined) {
+            if (!isBefore(segStart, irStartDate)) {
+                drawnIR = Math.round((drawnBP + drawnGP) * 0.05)
+            } else {
+                drawnIR = 0
+            }
         }
 
         // Find DA Rates
