@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import Image from 'next/image'
 import { Loader2, ShieldCheck } from 'lucide-react'
 
 const ROLES = [
@@ -44,7 +45,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-lime-200
+    <div className="min-h-screen flex items-center justify-center 
  from-blue-950 via-indigo-900 to-blue-800">
       <div className="absolute inset-0 opacity-10"
         style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '48px 48px' }}
@@ -55,9 +56,15 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-900 to-indigo-800 px-8 py-8 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 shadow-lg">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/bbmb-logo.jpeg" alt="BBMB Logo" className="w-16 h-16 object-contain rounded-full" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 shadow-lg overflow-hidden p-1">
+              <Image 
+                src="/bbmb-logo.jpeg" 
+                alt="BBMB Logo" 
+                width={80} 
+                height={80} 
+                className="w-full h-full object-contain rounded-full" 
+                priority
+              />
             </div>
             <h1 className="text-2xl font-bold text-white">BBMB Arrears System</h1>
             <p className="text-blue-200 text-sm mt-1">भाखड़ा ब्यास प्रबंध बोर्ड</p>

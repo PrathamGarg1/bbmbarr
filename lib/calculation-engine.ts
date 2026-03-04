@@ -88,26 +88,27 @@ export function calculateArrears(req: CalculationRequest): Segment[] {
         const segStart = sortedDates[i]
         const segEnd = subDays(sortedDates[i + 1], 1)
 
-        // Find active Pay Event
-        const activePayEvent = payEvents
+        // Find active Pay Event and use its BP/GP values.
+        // If they are null, we look back through previous events for the latest non-null values.
+        const relevantEvents = payEvents
             .filter(e => isBefore(e.date, addDays(segStart, 1)))
-            .sort((a, b) => b.date.getTime() - a.date.getTime())[0]
+            .sort((a, b) => b.date.getTime() - a.date.getTime())
 
+        const activePayEvent = relevantEvents[0]
         const basicPay = activePayEvent ? activePayEvent.basicPay : 0
-        const drawnBP = activePayEvent?.drawnBasicPay || 0
-        const drawnGP = activePayEvent?.drawnGradePay || 0
 
-        // Priority: 1. Provided in event (e.g. from Excel Import), 2. Auto-calculated for 2017+, 3. Zero
+        // Find latest non-null Drawn Basic Pay and Grade Pay
+        const drawnBP = relevantEvents.find(e => e.drawnBasicPay !== null && e.drawnBasicPay !== undefined)?.drawnBasicPay || 0
+        const drawnGP = relevantEvents.find(e => e.drawnGradePay !== null && e.drawnGradePay !== undefined)?.drawnGradePay || 0
+
+        // Auto-calculate 5% IR for drawn side from 1.1.2017 onwards
         const irStartDate = new Date('2017-01-01')
-        let drawnIR = activePayEvent?.drawnIR ?? 0
+        let drawnIR = 0
 
-        // If not explicitly provided (e.g. manual entry), auto-calculate for 2017+
-        if (activePayEvent?.drawnIR === undefined) {
-            if (!isBefore(segStart, irStartDate)) {
-                drawnIR = Math.round((drawnBP + drawnGP) * 0.05)
-            } else {
-                drawnIR = 0
-            }
+        // From 1.1.2017 onwards: IR = 5% of (Basic + Grade Pay)
+        // Before 1.1.2017 (2016): IR = 0
+        if (!isBefore(segStart, irStartDate)) {
+            drawnIR = Math.round((drawnBP + drawnGP) * 0.05)
         }
 
         // Find DA Rates
