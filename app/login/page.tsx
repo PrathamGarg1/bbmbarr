@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import { Loader2, ShieldCheck } from 'lucide-react'
-
+import logo from "./bbmb-logo.jpeg";
 const ROLES = [
   { value: 'CLERK', label: 'CLERK — लिपिक' },
   { value: 'JA', label: 'JA — कनिष्ठ सहायक' },
@@ -58,12 +58,9 @@ export default function LoginPage() {
           <div className="bg-gradient-to-r from-blue-900 to-indigo-800 px-8 py-8 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 shadow-lg overflow-hidden p-1">
               <Image 
-                src="/bbmb-logo.jpeg" 
+                src={logo}
                 alt="BBMB Logo" 
-                width={80} 
                 height={80} 
-                className="w-full h-full object-contain rounded-full" 
-                priority
               />
             </div>
             <h1 className="text-2xl font-bold text-white">BBMB Arrears System</h1>
