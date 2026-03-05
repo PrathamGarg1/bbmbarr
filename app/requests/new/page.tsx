@@ -5,14 +5,14 @@ import { auth } from '@/lib/auth'
 
 export default async function NewRequestPage() {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'CLERK') {
+  if (!session?.user || !['CLERK', 'SA'].includes(session.user.role as string)) {
     redirect('/dashboard')
   }
 
   async function createRequest(formData: FormData) {
     'use server'
     const session = await auth()
-    if (!session?.user?.email || session.user.role !== 'CLERK') throw new Error('Not authorized')
+    if (!session?.user?.email || !['CLERK', 'SA'].includes(session.user.role as string)) throw new Error('Not authorized')
 
     const initiator = await prisma.user.findUnique({ where: { email: session.user.email } })
     if (!initiator) throw new Error('User not found')

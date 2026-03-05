@@ -44,7 +44,7 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
   const links = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['CLERK', 'JA', 'SA', 'SUPERINTENDENT', 'PASSWORD_MANAGER'] },
     { href: '/requests', label: 'All Requests', icon: Search, roles: ['CLERK', 'JA', 'SA', 'SUPERINTENDENT'] },
-    { href: '/requests/new', label: 'New Request', icon: PlusCircle, roles: ['CLERK'] },
+    { href: '/requests/new', label: 'New Request', icon: PlusCircle, roles: ['CLERK', 'SA'] },
     { href: '/requests/bulk-verify', label: 'Bulk Verify', icon: Upload, roles: ['SUPERINTENDENT'] },
     { href: '/admin/passwords', label: 'Manage Passwords', icon: Key, roles: ['PASSWORD_MANAGER'] },
   ].filter(link => !userRole || link.roles.includes(userRole))

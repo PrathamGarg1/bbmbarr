@@ -72,7 +72,7 @@ export default async function AllRequestsPage({
           <h1 className="text-2xl font-bold text-slate-900">All Requests / सभी अनुरोध</h1>
           <p className="text-sm text-slate-500 mt-1">{total} total records found</p>
         </div>
-        {role === 'CLERK' && (
+        {(role === 'CLERK' || role === 'SA') && (
           <Link
             href="/requests/new"
             className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
