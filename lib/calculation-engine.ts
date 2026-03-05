@@ -101,15 +101,8 @@ export function calculateArrears(req: CalculationRequest): Segment[] {
         const drawnBP = relevantEvents.find(e => e.drawnBasicPay !== null && e.drawnBasicPay !== undefined)?.drawnBasicPay || 0
         const drawnGP = relevantEvents.find(e => e.drawnGradePay !== null && e.drawnGradePay !== undefined)?.drawnGradePay || 0
 
-        // Auto-calculate 5% IR for drawn side from 1.1.2017 onwards
+        // irStartDate used inside full/partial month branches to compute actualIR
         const irStartDate = new Date('2017-01-01')
-        let drawnIR = 0
-
-        // From 1.1.2017 onwards: IR = 5% of (Basic + Grade Pay)
-        // Before 1.1.2017 (2016): IR = 0
-        if (!isBefore(segStart, irStartDate)) {
-            drawnIR = Math.round((drawnBP + drawnGP) * 0.05)
-        }
 
         // Find DA Rates
         const activeRevDA = revisedDARates
@@ -133,22 +126,30 @@ export function calculateArrears(req: CalculationRequest): Segment[] {
         const monthlyDueDA = Math.round(basicPay * (revDAPct / 100))
         const monthlyTotalDue = basicPay + monthlyDueDA
 
-        // 2. DRAWN
-        const drawnForDA = drawnBP + drawnGP + drawnIR
-        const monthlyDrawnDA = Math.round(drawnForDA * (preRevDAPct / 100))
-        const monthlyTotalDrawn = drawnBP + drawnGP + drawnIR + monthlyDrawnDA
-
-        // Pro-Rata
+        // 2. DRAWN — IR is computed on pro-rated drawn BP+GP (matches reference sheet logic)
         let segmentDue, segmentDrawn, durationLabel
+        let actualIR = 0
 
         if (isFullMonth) {
+            // Full month: IR on full monthly values
+            if (!isBefore(segStart, irStartDate)) {
+                actualIR = Math.round((drawnBP + drawnGP) * 0.05)
+            }
+            const monthlyDrawnDA = Math.round((drawnBP + drawnGP + actualIR) * (preRevDAPct / 100))
+            const monthlyTotalDrawn = drawnBP + drawnGP + actualIR + monthlyDrawnDA
             segmentDue = monthlyTotalDue
             segmentDrawn = monthlyTotalDrawn
             durationLabel = "1 M"
         } else {
-            // Use Actual Days in Month for denominator (matches Reference Sheet logic for May 2018)
+            // Partial month: pro-rate BP and GP first, then compute IR on pro-rated values
+            const proRatedBP = Math.round(drawnBP * (daysInSeg / daysInMonth))
+            const proRatedGP = Math.round(drawnGP * (daysInSeg / daysInMonth))
+            if (!isBefore(segStart, irStartDate)) {
+                actualIR = Math.round((proRatedBP + proRatedGP) * 0.05)
+            }
+            const proRatedDA = Math.round((proRatedBP + proRatedGP + actualIR) * (preRevDAPct / 100))
             segmentDue = Math.round(monthlyTotalDue * (daysInSeg / daysInMonth))
-            segmentDrawn = Math.round(monthlyTotalDrawn * (daysInSeg / daysInMonth))
+            segmentDrawn = proRatedBP + proRatedGP + actualIR + proRatedDA
             durationLabel = `${daysInSeg} D`
         }
 
@@ -164,10 +165,10 @@ export function calculateArrears(req: CalculationRequest): Segment[] {
 
             drawnBasicPay: drawnBP,
             drawnGradePay: drawnGP,
-            drawnIR: drawnIR,
-            drawnDA: monthlyDrawnDA,
+            drawnIR: actualIR,
+            drawnDA: Math.round((drawnBP + drawnGP + actualIR) * (preRevDAPct / 100)),
             drawnDAPercentage: preRevDAPct,
-            drawnTotal: monthlyTotalDrawn, // Monthly Rate
+            drawnTotal: drawnBP + drawnGP + actualIR + Math.round((drawnBP + drawnGP + actualIR) * (preRevDAPct / 100)),
 
             totalDue: segmentDue, // Pro-rated
             totalDrawn: segmentDrawn, // Pro-rated
