@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { FileText, Search } from 'lucide-react'
+import { NewRequestDialog } from '@/components/workflow/new-request-dialog'
 
 const PAGE_SIZE = 10
 
@@ -73,12 +74,9 @@ export default async function AllRequestsPage({
           <p className="text-sm text-slate-500 mt-1">{total} total records found</p>
         </div>
         {(role === 'CLERK' || role === 'SA') && (
-          <Link
-            href="/requests/new"
-            className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-          >
+          <NewRequestDialog className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors cursor-pointer">
             + New Request
-          </Link>
+          </NewRequestDialog>
         )}
       </div>
 

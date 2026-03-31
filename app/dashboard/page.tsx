@@ -9,6 +9,7 @@ import { MotionButton } from '@/components/ui/motion-button'
 import { Plus, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
+import { NewRequestDialog } from '@/components/workflow/new-request-dialog'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -70,13 +71,8 @@ export default async function DashboardPage() {
             <p className="text-sm text-slate-500">BHAKRA BEAS MANAGEMENT BOARD — Arrear Calculation System</p>
           </div>
         </div>
-        {role === 'CLERK' && (
-          <Link href="/requests/new">
-            <MotionButton size="lg" className="shadow-blue-500/20">
-              <Plus className="mr-2 h-5 w-5" />
-              New Request
-            </MotionButton>
-          </Link>
+        {(role === 'CLERK' || role === 'SA') && (
+          <NewRequestDialog />
         )}
       </div>
 
